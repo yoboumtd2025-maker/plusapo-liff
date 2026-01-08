@@ -7,13 +7,15 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
-  <h2>連携中…</h2>
+  <h2 id="title">連携中…</h2>
   <pre id="log"></pre>
 
   <script>
     const LIFF_ID = "2008848156-7jEcNuDt";
+    const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbx7rPLjofyRj35bBK---b_SgAk_lGqjSCbReibZhLCh5gIpFD-QsZChxpgK2tav24fg_Q/exec";
 
     const log = (m) => document.getElementById("log").textContent += m + "\n";
+    const setTitle = (m) => document.getElementById("title").textContent = m;
 
     async function main() {
       await liff.init({ liffId: LIFF_ID });
@@ -25,14 +27,30 @@
 
       const profile = await liff.getProfile();
       log("userId: " + profile.userId);
-      log("displayName: " + (profile.displayName || ""));
 
-      document.querySelector("h2").textContent = "連携OK（この画面を閉じてください）";
+      setTitle("登録中…");
+
+      const res = await fetch(GAS_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: profile.userId })
+      });
+
+      const text = await res.text();
+      log("GAS: " + text);
+
+      if (text.trim() === "ok" || text.trim() === "already exists") {
+        setTitle("登録完了（この画面を閉じてください）");
+        // LINEアプリ内なら自動で閉じたい場合は次を有効化
+        // if (liff.isInClient()) liff.closeWindow();
+      } else {
+        setTitle("登録エラー（ログを確認してください）");
+      }
     }
 
     main().catch(e => {
       log("ERROR: " + (e && e.message ? e.message : e));
-      document.querySelector("h2").textContent = "エラーが発生しました";
+      setTitle("エラーが発生しました");
     });
   </script>
 </body>
