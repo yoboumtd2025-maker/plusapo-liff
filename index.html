@@ -10,11 +10,6 @@
   <h2 id="title">連携中…</h2>
   <pre id="log"></pre>
 
-  <!-- 同一タブでPOSTして確実に届ける（ブロック回避） -->
-  <form id="postForm" method="POST" style="display:none;">
-    <input type="hidden" name="userId" id="userIdField" />
-  </form>
-
   <script>
     const LIFF_ID = "2008848156-7jEcNuDt";
     const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwl51qojkwsdQ28GTc8lXcHLAgcWxCDOxSpLwsciFpSybOE_Wvc4CwscgUMzWq_ELQNLg/exec";
@@ -33,14 +28,22 @@
       const profile = await liff.getProfile();
       log("userId: " + profile.userId);
 
-      setTitle("登録中…（画面遷移します）");
+      setTitle("登録送信中…");
 
-      // 同一タブでPOST：最も確実
-      const form = document.getElementById("postForm");
-      form.action = GAS_ENDPOINT;
-      document.getElementById("userIdField").value = profile.userId;
-      form.submit();
-      // ここでGASのレスポンス画面（ok / already exists 等）が表示されるのが正常
+      // CORS回避のため no-cors ＋ フォーム形式で送信（レスポンスは読めません）
+      const body = new URLSearchParams();
+      body.append("userId", profile.userId);
+
+      await fetch(GAS_ENDPOINT, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+        body: body.toString()
+      });
+
+      // no-cors は成功/失敗を判定できないので、送信後は「送信しました」と表示
+      setTitle("送信しました（スプレッドシートを確認してください）");
+      // if (liff.isInClient()) liff.closeWindow();
     }
 
     main().catch(e => {
