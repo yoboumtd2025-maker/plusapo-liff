@@ -14,8 +14,12 @@
     const LIFF_ID = "2008848156-7jEcNuDt";
     const GAS_ENDPOINT = "https://plusapo-proxy.yobou-mtd2025.workers.dev/";
 
-    const log = (m) => document.getElementById("log").textContent += m + "\n";
-    const setTitle = (m) => document.getElementById("title").textContent = m;
+    const log = (m) => {
+      document.getElementById("log").textContent += m + "\n";
+    };
+    const setTitle = (m) => {
+      document.getElementById("title").textContent = m;
+    };
 
     async function main() {
       await liff.init({ liffId: LIFF_ID });
@@ -30,28 +34,17 @@
 
       setTitle("登録中…");
 
-      // ここが重要：GAS_ENDPOINT を呼ぶ
       const res = await fetch(GAS_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: profile.userId })
       });
 
-      let data;
-      try {
-        data = await res.json();
-      } catch (e) {
-        // JSONが返らない場合の保険（原則WorkerはJSONを返す）
-        const t = await res.text();
-        log("non-json response: " + t);
-        throw new Error("proxy response is not JSON");
-      }
-
+      const data = await res.json();
       log("proxy: " + JSON.stringify(data));
 
-      if (data && data.ok) {
+      if (data.ok) {
         setTitle("登録完了（この画面を閉じてください）");
-        // 自動で閉じたいなら有効化
         // if (liff.isInClient()) liff.closeWindow();
       } else {
         setTitle("登録エラー（ログを確認してください）");
