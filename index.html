@@ -10,9 +10,8 @@
   <h2 id="title">連携中…</h2>
   <pre id="log"></pre>
 
-  <!-- CORS回避：フォームPOSTでGASへ送る（レスポンスは読まない） -->
-  <iframe name="hidden_iframe" style="display:none;"></iframe>
-  <form id="postForm" method="POST" target="hidden_iframe" style="display:none;">
+  <!-- 同一タブでPOSTして確実に届ける（ブロック回避） -->
+  <form id="postForm" method="POST" style="display:none;">
     <input type="hidden" name="userId" id="userIdField" />
   </form>
 
@@ -34,20 +33,14 @@
       const profile = await liff.getProfile();
       log("userId: " + profile.userId);
 
-      setTitle("登録中…");
+      setTitle("登録中…（画面遷移します）");
 
-      // フォーム送信（CORSの影響を受けにくい）
+      // 同一タブでPOST：最も確実
       const form = document.getElementById("postForm");
       form.action = GAS_ENDPOINT;
       document.getElementById("userIdField").value = profile.userId;
       form.submit();
-
-      // GASレスポンスは読めない前提なので、少し待って完了表示
-      setTimeout(() => {
-        setTitle("登録完了（この画面を閉じてください）");
-        // LINEアプリ内で自動で閉じたいなら下を有効化
-        // if (liff.isInClient()) liff.closeWindow();
-      }, 900);
+      // ここでGASのレスポンス画面（ok / already exists 等）が表示されるのが正常
     }
 
     main().catch(e => {
