@@ -12,7 +12,7 @@
 
   <script>
     const LIFF_ID = "2008848156-7jEcNuDt";
-    const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwl51qojkwsdQ28GTc8lXcHLAgcWxCDOxSpLwsciFpSybOE_Wvc4CwscgUMzWq_ELQNLg/exec";
+    const ENDPOINT = "https://plusapo-proxy.yobou-mtd2025.workers.dev/"; // ← Workerに変更
 
     const log = (m) => document.getElementById("log").textContent += m + "\n";
     const setTitle = (m) => document.getElementById("title").textContent = m;
@@ -28,22 +28,23 @@
       const profile = await liff.getProfile();
       log("userId: " + profile.userId);
 
-      setTitle("登録送信中…");
+      setTitle("登録中…");
 
-      // CORS回避のため no-cors ＋ フォーム形式で送信（レスポンスは読めません）
-      const body = new URLSearchParams();
-      body.append("userId", profile.userId);
-
-      await fetch(GAS_ENDPOINT, {
+      const res = await fetch(ENDPOINT, {
         method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-        body: body.toString()
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: profile.userId })
       });
 
-      // no-cors は成功/失敗を判定できないので、送信後は「送信しました」と表示
-      setTitle("送信しました（スプレッドシートを確認してください）");
-      // if (liff.isInClient()) liff.closeWindow();
+      const data = await res.json();
+      log("proxy: " + JSON.stringify(data));
+
+      if (data.ok) {
+        setTitle("登録完了（この画面を閉じてください）");
+        // if (liff.isInClient()) liff.closeWindow();
+      } else {
+        setTitle("登録エラー（ログを確認してください）");
+      }
     }
 
     main().catch(e => {
