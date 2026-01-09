@@ -36,7 +36,7 @@
 
       setTitle("登録中…");
 
-      // フォーム送信（CORS影響を受けにくい）
+      // フォーム送信（CORSの影響を受けにくい）
       const form = document.getElementById("postForm");
       form.action = GAS_ENDPOINT;
       document.getElementById("userIdField").value = profile.userId;
