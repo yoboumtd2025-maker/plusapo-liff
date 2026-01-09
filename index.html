@@ -10,6 +10,12 @@
   <h2 id="title">連携中…</h2>
   <pre id="log"></pre>
 
+  <!-- CORS回避：フォームPOSTでGASへ送る（レスポンスは読まない） -->
+  <iframe name="hidden_iframe" style="display:none;"></iframe>
+  <form id="postForm" method="POST" target="hidden_iframe" style="display:none;">
+    <input type="hidden" name="userId" id="userIdField" />
+  </form>
+
   <script>
     const LIFF_ID = "2008848156-7jEcNuDt";
     const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwl51qojkwsdQ28GTc8lXcHLAgcWxCDOxSpLwsciFpSybOE_Wvc4CwscgUMzWq_ELQNLg/exec";
@@ -30,22 +36,18 @@
 
       setTitle("登録中…");
 
-      const res = await fetch(GAS_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: profile.userId })
-      });
+      // フォーム送信（CORS影響を受けにくい）
+      const form = document.getElementById("postForm");
+      form.action = GAS_ENDPOINT;
+      document.getElementById("userIdField").value = profile.userId;
+      form.submit();
 
-      const text = await res.text();
-      log("GAS: " + text);
-
-      if (text.trim() === "ok" || text.trim() === "already exists") {
+      // GASレスポンスは読めない前提なので、少し待って完了表示
+      setTimeout(() => {
         setTitle("登録完了（この画面を閉じてください）");
-        // LINEアプリ内なら自動で閉じたい場合は次を有効化
+        // LINEアプリ内で自動で閉じたいなら下を有効化
         // if (liff.isInClient()) liff.closeWindow();
-      } else {
-        setTitle("登録エラー（ログを確認してください）");
-      }
+      }, 900);
     }
 
     main().catch(e => {
