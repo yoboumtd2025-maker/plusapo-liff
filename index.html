@@ -30,17 +30,28 @@
 
       setTitle("登録中…");
 
-      const res = await fetch(ENDPOINT, {
+      // ここが重要：GAS_ENDPOINT を呼ぶ
+      const res = await fetch(GAS_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: profile.userId })
       });
 
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        // JSONが返らない場合の保険（原則WorkerはJSONを返す）
+        const t = await res.text();
+        log("non-json response: " + t);
+        throw new Error("proxy response is not JSON");
+      }
+
       log("proxy: " + JSON.stringify(data));
 
-      if (data.ok) {
+      if (data && data.ok) {
         setTitle("登録完了（この画面を閉じてください）");
+        // 自動で閉じたいなら有効化
         // if (liff.isInClient()) liff.closeWindow();
       } else {
         setTitle("登録エラー（ログを確認してください）");
